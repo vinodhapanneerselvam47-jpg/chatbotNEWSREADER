@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsReader AI</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Inter, Arial, sans-serif;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(79, 70, 229, 0.28), transparent 28%),
+                radial-gradient(circle at 90% 90%, rgba(14, 165, 233, 0.22), transparent 30%),
+                #07111f;
+            color: #eef6ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .app {
+            width: min(980px, 100%);
+            height: min(760px, 92vh);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
+            background: rgba(8, 20, 35, 0.82);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(20px);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 22px 26px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            display: grid;
+            place-items: center;
+            border-radius: 15px;
+            font-size: 25px;
+            background: linear-gradient(135deg, #6366f1, #06b6d4);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.25);
+        }
+
+        .brand h1 {
+            font-size: 20px;
+            letter-spacing: 0.2px;
+        }
+
+        .brand p {
+            margin-top: 4px;
+            color: #91a5bb;
+            font-size: 13px;
+        }
+
+        .status {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #9fb2c7;
+            font-size: 12px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 12px #22c55e;
+        }
+
+        .chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px;
+            scroll-behavior: smooth;
+        }
+
+        .welcome {
+            max-width: 650px;
+            margin: 25px auto;
+            text-align: center;
+        }
+
+        .welcome .headline {
+            font-size: clamp(30px, 5vw, 48px);
+            line-height: 1.05;
+            font-weight: 800;
+            background: linear-gradient(90deg, #ffffff, #9ed8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome p {
+            margin-top: 14px;
+            color: #9fb2c7;
+            line-height: 1.6;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 9px;
+            margin-top: 22px;
+        }
+
+        .chip {
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            border-radius: 999px;
+            padding: 9px 13px;
+            background: rgba(255, 255, 255, 0.045);
+            color: #c8d8e8;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .chip:hover {
+            transform: translateY(-2px);
+            background: rgba(99, 102, 241, 0.18);
+            border-color: rgba(129, 140, 248, 0.45);
+        }
+
+        .message {
+            display: flex;
+            margin: 14px 0;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .bubble {
+            max-width: min(760px, 84%);
+            padding: 13px 16px;
+            border-radius: 18px;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .message.user .bubble {
+            border-bottom-right-radius: 5px;
+            background: linear-gradient(135deg, #4f46e5, #2563eb);
+        }
+
+        .message.bot .bubble {
+            border-bottom-left-radius: 5px;
+            background: rgba(255, 255, 255, 0.065);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #dce8f5;
+        }
+
+        .typing {
+            opacity: 0.65;
+            font-style: italic;
+        }
+
+        .composer {
+            padding: 18px 22px 22px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(5, 14, 26, 0.72);
+        }
+
+        .input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 9px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 19px;
+            background: rgba(255, 255, 255, 0.045);
+        }
+
+        textarea {
+            flex: 1;
+            min-height: 48px;
+            max-height: 130px;
+            resize: none;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: #f5f9ff;
+            font: inherit;
+            padding: 13px 10px;
+        }
+
+        textarea::placeholder {
+            color: #71869d;
+        }
+
+        button.send {
+            width: 48px;
+            height: 48px;
+            border: 0;
+            border-radius: 14px;
+            cursor: pointer;
+            color: white;
+            font-size: 20px;
+            background: linear-gradient(135deg, #6366f1, #0891b2);
+            transition: 0.2s ease;
+        }
+
+        button.send:hover {
+            transform: translateY(-2px);
+        }
+
+        button.send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .note {
+            margin-top: 9px;
+            text-align: center;
+            color: #63788e;
+            font-size: 11px;
+        }
+
+        @media (max-width: 650px) {
+            body {
+                padding: 0;
+            }
+
+            .app {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .header {
+                padding: 17px;
+            }
+
+            .chat {
+                padding: 20px 15px;
+            }
+
+            .composer {
+                padding: 12px;
+            }
+
+            .status {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="app">
+        <header class="header">
+            <div class="logo">📰</div>
+
+            <div class="brand">
+                <h1>NewsReader AI</h1>
+                <p>Smart news & current affairs assistant</p>
+            </div>
+
+            <div class="status">
+                <span class="dot"></span>
+                AI Online
+            </div>
+        </header>
+
+        <section class="chat" id="chat">
+            <div class="welcome" id="welcome">
+                <div class="headline">Stay informed.<br>Understand the news.</div>
+                <p>
+                    Ask NewsReader AI about news, current affairs, headlines,
+                    journalism, or a news-related topic.
+                </p>
+
+                <div class="chips">
+                    <button class="chip" data-question="What is current affairs?">
+                        Current affairs
+                    </button>
+                    <button class="chip" data-question="Explain the importance of news literacy.">
+                        News literacy
+                    </button>
+                    <button class="chip" data-question="How should I understand a news headline?">
+                        Understand headlines
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <footer class="composer">
+            <form id="chatForm" class="input-row">
+                <textarea
+                    id="messageInput"
+                    rows="1"
+                    placeholder="Ask a news-related question..."
+                    autocomplete="off"
+                    required
+                ></textarea>
+
+                <button class="send" id="sendButton" type="submit" aria-label="Send">
+                    ➤
+                </button>
+            </form>
+
+            <div class="note">
+                NewsReader AI answers only news-related questions.
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        const chat = document.getElementById("chat");
+        const welcome = document.getElementById("welcome");
+        const form = document.getElementById("chatForm");
+        const input = document.getElementById("messageInput");
+        const sendButton = document.getElementById("sendButton");
+
+        function addMessage(text, type) {
+            const wrapper = document.createElement("div");
+            wrapper.className = `message ${type}`;
+
+            const bubble = document.createElement("div");
+            bubble.className = "bubble";
+            bubble.textContent = text;
+
+            wrapper.appendChild(bubble);
+            chat.appendChild(wrapper);
+            chat.scrollTop = chat.scrollHeight;
+
+            return wrapper;
+        }
+
+        async function sendMessage(message) {
+            const cleanMessage = message.trim();
+
+            if (!cleanMessage) return;
+
+            welcome.style.display = "none";
+            addMessage(cleanMessage, "user");
+
+            input.value = "";
+            input.style.height = "48px";
+            sendButton.disabled = true;
+
+            const typing = addMessage("NewsReader AI is thinking...", "bot");
+            typing.querySelector(".bubble").classList.add("typing");
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ message: cleanMessage })
+                });
+
+                const data = await response.json();
+
+                typing.remove();
+
+                if (!response.ok) {
+                    addMessage(data.response || "Something went wrong.", "bot");
+                    return;
+                }
+
+                addMessage(data.response, "bot");
+            } catch (error) {
+                typing.remove();
+                addMessage(
+                    "Unable to connect to the AI service. Please try again.",
+                    "bot"
+                );
+            } finally {
+                sendButton.disabled = false;
+                input.focus();
+            }
+        }
+
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            sendMessage(input.value);
+        });
+
+        input.addEventListener("input", () => {
+            input.style.height = "48px";
+            input.style.height = `${Math.min(input.scrollHeight, 130)}px`;
+        });
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+        });
+
+        document.querySelectorAll(".chip").forEach((chip) => {
+            chip.addEventListener("click", () => {
+                sendMessage(chip.dataset.question);
+            });
+        });
+    </script>
+</body>
+</html>
